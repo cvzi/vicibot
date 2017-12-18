@@ -1,0 +1,3 @@
+[submodule "ViciBot/botserver"]
+	path = ViciBot/botserver
+	url = https://github.com/cvzi/bothelper.git
