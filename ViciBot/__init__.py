@@ -42,7 +42,7 @@ class MyViciBot(server.Bot):
     
     startMessageText = """Welcome to the """+NAME
     startMessageText_full = startMessageText+"""
-This bot let's you access data from vici.org. The data is available to this bot and to you by the following license:
+This bot helps you to access data from vici.org. The data is available to this bot and to you by the following license:
 
 All content on Vici.org is published under the Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0) license.
 It may be shared, adapted or commercially used under the condition that a reference with link to http://vici.org/, or to the relevant page on Vici.org, as the source is provided.
@@ -59,7 +59,6 @@ If you alter, transform, or build upon this work, you may distribute the resulti
     def onOtherResponse(self, msg):
         # Search for features by text
         
-        
         query = msg["text_nice_lower"].strip()
         if query.startswith("/search"):
             query = query[7:]
@@ -67,9 +66,13 @@ If you alter, transform, or build upon this work, you may distribute the resulti
             query = query[6:]
         query = query.strip()
         
+        if len(query) < 3:
+            self.sendText(msg, "Search text is to short. Please, be more specific :left-pointing_magnifying_glass:")
+            return
+        
         features = self.vici.searchFeatures(query)
         if len(features) == 0:
-            self.sendText(msg, "Sorry, no results.")
+            self.sendText(msg, ":moai: Sorry, no results.")
             return
         
         text = []
@@ -110,7 +113,7 @@ If you alter, transform, or build upon this work, you may distribute the resulti
 
             
         else:
-            self.sendText(msg, "Nothing found in your area (radius: %d km)" % radius)
+            self.sendText(msg, ":pushpin: Nothing found in your area (radius: %d km)" % radius)
 
             
             
@@ -131,7 +134,7 @@ If you alter, transform, or build upon this work, you may distribute the resulti
             m = re.search(r"map\s*(.+)", msg["text_nice_lower"])
             
             if m is None:
-                return self.sendText(msg, "This command shows a map. Either by address or by coordinates. \nCommand format: /map address\nExample: /mapMilano")
+                return self.sendText(msg, ":right_arrow: This command shows a map. Either by address or by coordinates. \nCommand format: /map address\nExample: /mapMilano")
             
             query = m.group(1).strip()
             
@@ -160,7 +163,7 @@ If you alter, transform, or build upon this work, you may distribute the resulti
                 
                 self.sendText(msg, title)
             else:
-                return self.sendText(msg, "I could not find that address")
+                return self.sendText(msg, ":moai: I could not find that address")
         
         
         for radius in radius_steps:
@@ -169,7 +172,7 @@ If you alter, transform, or build upon this work, you may distribute the resulti
                 break
 
         if len(features) == 0:
-            return self.sendText(msg, "Sorry, nothing interesting was found in your vicinity.")
+            return self.sendText(msg, ":moai: Sorry, nothing interesting was found in that area :world_map:")
             
             
         # Generate map and text for the labels
@@ -202,7 +205,7 @@ If you alter, transform, or build upon this work, you may distribute the resulti
         
         m = re.match(r"/?f\s*(\d+)", msg["text_nice_lower"])
         if m is None:
-            return self.sendText(msg, "This command shows the details of a single record. Command format for feature with id 123:\n/f123")
+            return self.sendText(msg, ":right_arrow: This command shows the details of a single record. Command format for feature with id 123:\n/f123")
         fid = int(m.group(1))
         
         f = self.vici.getFeature(fid)
@@ -229,7 +232,15 @@ If you alter, transform, or build upon this work, you may distribute the resulti
         self.sendQuestion(msg, "Do you agree to this license?", responses=[("Yes",self.showHelp, self.yes), ("No", self.pleaseLeave, self.no)], onOtherResponse=self.what)
 
     def pleaseLeave(self, msg):
-        self.sendText(msg, "Please stop using this bot!")
+        self.sendText(msg, "Please stop using this bot :exclamation_mark:")
+        
+        
+    @serv.textLike("hi")
+    @serv.textLike("hey")
+    @serv.textLike("hello")
+    def showHello(self, msg):
+        self.sendText(msg, "Salve :raised_back_of_hand:")
+        self.showHelp(msg);
 
     @serv.textLike("/help")
     @serv.textLike("help")
@@ -264,7 +275,6 @@ def getMyBot(HOSTNAME):
                           
     if "htmlbot" in config:
         myBot.addFlaskBot(bottype=htmlbot.HtmlBot, route=config["htmlbot"]["route"])
-        
     
     
     
