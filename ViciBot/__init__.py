@@ -52,6 +52,36 @@ If you alter, transform, or build upon this work, you may distribute the resulti
     geocodeCache = {}
     
     
+    @serv.textStartsWith("/test")
+    def testMessage(self, msg):
+    
+        m = re.search(r"\/test\s*(\d+)", msg["text_nice_lower"])
+        if m is not None:
+            N = int(m.group(1))
+        else:
+            N = 3000
+    
+    
+        emojis = [':fish:', ':squid:', ':shark:', ':octopus:', ':fried_shrimp:', ':cow:', ':pig:', ':horse:', ':boar:', ':goat:', ':deer:', ':rabbit:', ':sheep:', ':rooster:', ':turkey:', ':duck:', ':panda_face:', ':mushroom:', ':tangerine:', ':lemon:', ':peach:', ':baguette_bread:', ':grapes:', 
+        ':tomato:', ':strawberry:', ':banana:', ':cherries:', ':wine_glass:', ':eggplant:', ':ear_of_corn:', ':carrot:', ':cucumber:', ':peanuts:', ':potato:', ':roasted_sweet_potato:', ':honey_pot:', ':poultry_leg:', ':cheese_wedge:', ':pizza:', ':hamburger:', ':burrito:', ':french_fries:', ':stuffed_flatbread:', 
+        ':green_salad:', ':bacon:', ':spaghetti:', ':cooked_rice:', ':bento_box:', ':shortcake:', ':cookie:', ':pancakes:', ':chocolate_bar:', ':ice_cream:', ':doughnut:', ':hot_beverage:', ':beer_mug:', ':wrapped_gift:']
+    
+        text = ""
+        
+        #for i in range(N):
+            #text += "%d %s %s\n" % (i, 5*emojis[i % 50],emojis[i % 50].replace(":","_") )
+            #text += "%s\n" % i
+            
+        text = "a" * N
+            
+        print(len(text))
+        
+        SN = "%d" % N
+        
+        self.sendText(msg, text[:-len(SN)] + SN)
+        
+        print(len(text))
+    
 
     # Builtin event: called if no other function matches
     @serv.textStartsWith("/search")
@@ -76,10 +106,12 @@ If you alter, transform, or build upon this work, you may distribute the resulti
             return
         
         text = []
+        buttons = []
         for row in features:
             text.append("%s /f%d" % (row[1], row[-1]))
+            buttons.append(( "%s" % row[1], "/f%d" % row[-1] ))
         
-        self.sendText(msg, "\n\n".join(text))
+        self.sendTextWithButtons(msg, "\n\n".join(text), buttons=buttons)
         
         
     # Builtin event: called if a location was sent (only Telegram and Facebook support this)
@@ -106,7 +138,7 @@ If you alter, transform, or build upon this work, you may distribute the resulti
                 dist = ("%.2fkm" if row[-1] < 5.6 else "%.0fkm") % row[-1]
                 
                 text.append("%s: %s /f%d" % (dist, row[1], row[-2]))
-                buttons.append(( "%s" % row[1], "/f%d" % row[-2]  ))
+                buttons.append(( "%s" % row[1], "/f%d" % row[-2] ))
                 
             self.sendTextWithButtons(msg, "\n\n".join(text), buttons=buttons)
         
@@ -213,13 +245,14 @@ If you alter, transform, or build upon this work, you may distribute the resulti
         text = "%s\n%s" % (f.title, f.summary)
 
         if f.img:
-            text += "\nImage: https://static.vici.org/cache/800x0-3%s" % f.img
-        text += "\nWeb: https://vici.org/vici/%d/" % f.id
-        
-        
+            self.sendPhoto(msg, "https://static.vici.org/cache/800x0-3%s" % f.img)
+            
         self.sendText(msg, text)
         
+        self.sendLink(msg, "https://vici.org/vici/%d/" % f.id);
         
+
+
 
     def what(self, msg):
         self.sendText(msg, "Whaaaaat?")
@@ -245,10 +278,10 @@ If you alter, transform, or build upon this work, you may distribute the resulti
     @serv.textLike("/help")
     @serv.textLike("help")
     def showHelp(self, msg):
-        self.sendText(msg, "Just send me the name of an object and I will show you all the records.\nOther commands:\n" + 
-        "\"/map address\" e.g. /mapPompeii\n" + 
-        "\"/search something\" e.g. /searchColosseum\n" + 
-        "\"/f id\" e.g. /f11600\n" + 
+        self.sendText(msg, "Just send me the name of an object and I will show you all the records.\n\nOther commands:\n" + 
+        "\"/map address\"\ne.g. map Pompeii\n" + 
+        "\"/search something\"\ne.g. search Colosseum\n" + 
+        "\"/f id\"\ne.g. /f11600\n\n" + 
         "(The slashes at the beginning are optional)")
 
 
@@ -287,6 +320,19 @@ def getMyBot_html():
         
     if "htmlbot" in config:
         myBot.addFlaskBot(bottype=htmlbot.HtmlBot, route=config["htmlbot"]["route"])
+    
+    return myBot
+    
+def getMyBot_html_and_telegram():
+    # Only run the HMTL bot for easier local testing
+    myBot = MyViciBot(serv, NAME)
+        
+    if "htmlbot" in config:
+        myBot.addFlaskBot(bottype=htmlbot.HtmlBot, route=config["htmlbot"]["route"])
+        
+    if "telegrambot" in config:
+        myBot.addBot(bottype=telegrambot.TelegramBotWithoutFlask, token=config["telegrambot"]["token"])
+    
     
     return myBot
     
